@@ -31,7 +31,7 @@ int main(int argc, char *argv[])
         int shm_id = shmget(SHM_KEY, 1000 * sizeof(int), IPC_CREAT | IPC_EXCL | PERM);
         checkNeg(shm_id, "IPCs already created");
 
-        sem_create(SEM_KEY, 1, PERM, 0);
+        sem_create(SEM_KEY, 1, PERM, 1);
 
         printf("IPCs created\n");
     }
