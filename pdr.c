@@ -27,7 +27,7 @@ int main(int argc, char const *argv[])
 
         if (z[account] + amount < LIMIT_AMOUNT)
         {
-            perror("Overdraft amount\n")
+            perror("Overdraft amount\n");
         }
         else
         {
