@@ -9,9 +9,46 @@
 #include "utils_v1.h"
 #include "config.h"
 
-int main(int argc, char const *argv[])
+void checkUsage(int argc, char *argv[])
 {
-    /* code */
+    if (argc != 2 || (!strcmp(argv[1], "1") && !strcmp(argv[1], "2")))
+    {
+        printf("Usage :\n");
+        printf("%s 1 to create IPCs\n", argv[0]);
+        printf("%s 2 to destroy IPCs\n", argv[0]);
+        printf("%s 3 [opt] to reserve exclusively the shared account book for [opt] seconds\n", argv[0]);
+        exit(EXIT_FAILURE);
+    }
+}
 
-    return 0;
+int main(int argc, char *argv[])
+{
+    checkUsage(argc, argv);
+
+    if (!strcmp(argv[1], "1"))
+    {
+        // IPC creation and initialization
+        int shm_id = shmget(SHM_KEY, 2 * sizeof(pid_t), IPC_CREAT | IPC_EXCL | PERM);
+        checkNeg(shm_id, "IPCs already created");
+
+        sem_create(SEM_KEY, 1, PERM, 0);
+
+        printf("IPCs created\n");
+    }
+    else if (!strcmp(argv[1], "2"))
+    {
+        // IPC destruction
+        printf("Destroying IPCs...\n");
+        int shm_id = shmget(SHM_KEY, 2 * sizeof(pid_t), 0);
+        checkNeg(shm_id, "IPCs not existing");
+
+        sshmdelete(shm_id);
+
+        int sem_id = sem_get(SEM_KEY, 1);
+        sem_delete(sem_id);
+
+        printf("IPCs freed\n");
+    }
+
+    exit(EXIT_SUCCESS);
 }
