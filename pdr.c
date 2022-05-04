@@ -25,6 +25,7 @@ int main(int argc, char const *argv[])
         int account = atoi(argv[1]);
         int amount = atoi(argv[2]);
 
+        printf("Amount of the account: %d\n", z[account]);
         if (z[account] + amount < LIMIT_AMOUNT)
         {
             perror("Overdraft amount\n");
@@ -34,6 +35,7 @@ int main(int argc, char const *argv[])
             sem_down0(sem_id);
             z[account] += amount;
             sem_up0(sem_id);
+            printf("Amount of the account after transaction: %d\n", z[account]); 
         }
     }
     return 0;
