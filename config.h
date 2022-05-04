@@ -8,4 +8,6 @@
 #define SEM_KEY 369
 #define PERM 0666
 
+#define LIMIT_AMOUNT -100
+
 #endif
