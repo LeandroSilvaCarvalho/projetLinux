@@ -6,8 +6,10 @@
 #include <string.h>
 #include <time.h>
 #include <fcntl.h>
+#include <unistd.h>
 
 #include "utils_v1.h"
+#include "transfer.h"
 
 #define CHOICE_SIZE 50
 
@@ -23,6 +25,19 @@ void propositions()
     printf("To do a transfer: + [receiver] [amount]\n");
     printf("To do a recurring transfer: * [receiver] [amount]\n");
     printf("To quit: q\n");
+}
+
+void child_timer(int delay)
+{
+    while (1)
+    {
+
+        sleep(delay);
+    }
+}
+
+void child_transfer_()
+{
 }
 
 int main(int argc, char const *argv[])
@@ -44,6 +59,9 @@ int main(int argc, char const *argv[])
         printf("Num: %d\n", num);
         printf("Delay: %d\n", delay);
 
+        structTransfer transfer;
+        transfer.sender = num;
+
         propositions();
 
         char choice[CHOICE_SIZE];
@@ -53,8 +71,6 @@ int main(int argc, char const *argv[])
 
         while (choice[0] != 'q')
         {
-            int size = strlen(choice);
-            printf("%d\n", size);
             if (strlen(choice) > 1)
             {
 
@@ -75,12 +91,20 @@ int main(int argc, char const *argv[])
                     }
                 }
 
-
                 if (choice[0] == '+')
                 {
                     printf("type:%s|\n", dividedChoise[0]);
                     printf("compte:%s|\n", dividedChoise[1]);
                     printf("montant:%s|\n", dividedChoise[2]);
+
+                    int sockfd = initSocketClient(adr, port);
+                    transfer.receiver = atoi(dividedChoise[1]);
+                    transfer.amount = atoi(dividedChoise[2]);
+                    swrite(sockfd, &transfer, sizeof(transfer));
+
+                    // Message a ajouter
+
+                    sclose(sockfd);
                 }
                 else if (choice[0] == '*')
                 {
