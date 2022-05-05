@@ -29,13 +29,18 @@ int main(int argc, char *argv[])
 
     int port = atoi(argv[2]);
 
-    structMessage msg;
+    StructMessage msg;
     int ret = sread(0, msg.messageText, MAX_TEXT);
     msg.messageText[ret-1] = '\0';
     msg.code = INSCRIPTION_REQUEST;
 
     int sockfd = initSocketClient(argv[1], port);
-    swrite(sockfd, &msg, sizeof(msg));
+    printf("indiquez votre compte : ");
+    swrite(sockfd, &msg.senderAccount, sizeof(msg.senderAccount));
+    printf("\nindiquez le compte beneficiaire : ");
+    swrite(sockfd, &msg.beneficiaryAccount, sizeof(msg.beneficiaryAccount));
+    printf("\n indiquez le montant : ");
+    swrite(sockfd, &msg.amount, sizeof(msg.amount));
     sread(sockfd, &msg, sizeof(msg));
     if (msg.code == INSCRIPTION_OK)
     {

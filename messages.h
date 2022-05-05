@@ -9,7 +9,10 @@
 
 /* struct message used between server and client */
 typedef struct {
-  char messageText[MAX_TEXT];
+  int senderAccount;
+  int beneficiaryAccount;
+  int amount;
   int code;
-} structMessage;
+  char messageText[MAX_TEXT];
+} StructMessage;
 #endif

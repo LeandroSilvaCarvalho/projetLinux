@@ -24,15 +24,23 @@ int initSocketServer(int port)
 
 int main(int argc, char const *argv[])
 {
-    structMessage msg;
+    StructMessage msg;
     if(argc<1){
         perror("Missing arguments\n");
         exit(0);
     }
+
+    int sem_id = sem_get(SEM_KEY, 1);
+    int shm_id = sshmget(SHM_KEY, 1000 * sizeof(int), 0);
+    int *z = sshmat(shm_id);
     
     struct pollfd fds[1024];
     bool fds_invalid[1024];
     int nbSockfd = 0;
+
+    int amount = msg.amount;
+    int sender = msg.senderAccount;
+    int beneficiary = msg.beneficiaryAccount;
 
     int port = atoi(argv[1]);
     int sockfd = initSocketServer(port);
@@ -43,8 +51,6 @@ int main(int argc, char const *argv[])
     fds_invalid[nbSockfd] = false;
     nbSockfd++;
     int newSockfd;
-
-
     while(1){
       spoll(fds, nbSockfd, 5000);
 
@@ -54,15 +60,28 @@ int main(int argc, char const *argv[])
 		    fds[nbSockfd].events = POLLIN;
 		    fds_invalid[nbSockfd] = false;
         nbSockfd++;
-        sread(newSockfd, &msg, sizeof(msg));
-        printf("bonjour %s\n", msg.messageText);
-        printf("aurevoir %s\n", msg.messageText);
+
+        sread(newSockfd, &sender, sizeof(sender));
+        sread(newSockfd, &beneficiary, sizeof(beneficiary));
+        sread(newSockfd, &amount, sizeof(amount));
+
         msg.code = INSCRIPTION_OK;
+
+        if(z[sender]-amount< LIMIT_AMOUNT){
+            perror("Overdraft amount\n");
+            exit(0);
+        }
+        sem_down0(sem_id);
+        z[sender]-= amount;
+        z[beneficiary]+=amount;
+        sem_up0(sem_id);
+        char msgTxt [100];
+        sprintf (msgTxt, "voici votre montant actuelle %d sur le compte %d ", z[sender], sender);
+        nwrite(newSockfd, &msgTxt, sizeof(msgTxt));
       }
-      nwrite(newSockfd, &msg, sizeof(msg));
+     
     }
 
     sclose(sockfd);
-    
     return 0;
 }
