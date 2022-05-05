@@ -27,7 +27,7 @@ void propositions()
     printf("To quit: q\n");
 }
 
-void child_timer(int delay)
+void child_timer(int delay, StructTransfer pipe)
 {
     while (1)
     {
@@ -36,8 +36,9 @@ void child_timer(int delay)
     }
 }
 
-void child_transfer_()
+void child_transfer_(StructTransfer pipe)
 {
+
 }
 
 int main(int argc, char const *argv[])
@@ -59,8 +60,16 @@ int main(int argc, char const *argv[])
         printf("Num: %d\n", num);
         printf("Delay: %d\n", delay);
 
-        structTransfer transfer;
+        StructTransfer transfer;
         transfer.sender = num;
+
+        StructTransfer pipe[2];
+
+        spipe(pipe);
+
+        fork_and_run2(child_timer, delay, pipe);
+        fork_and_run1(child_transfer_, pipe);
+
 
         propositions();
 
@@ -119,6 +128,7 @@ int main(int argc, char const *argv[])
             choice[strlen(choice) - 1] = '\0';
         }
     }
+    sclose(pipe);
 
     return 0;
 }

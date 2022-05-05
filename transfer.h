@@ -6,5 +6,6 @@ typedef struct {
   int sender;
   int receiver;
   int amount;
-} structTransfer;
+} StructTransfer;
+
 #endif
