@@ -76,7 +76,6 @@ int main(int argc, char const *argv[])
             perror("Overdraft amount\n");
             exit(0);
         }
-        printf("section")
         sem_down0(sem_id);
         z[sender]-= amount;
         z[beneficiary]+=amount;
