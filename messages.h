@@ -7,12 +7,13 @@
 #define INSCRIPTION_OK		11
 #define INSCRIPTION_KO 		12
 
+#include "transfer.h"
+
 /* struct message used between server and client */
 typedef struct {
-  int senderAccount;
-  int beneficiaryAccount;
-  int amount;
-  int code;
   char messageText[MAX_TEXT];
+  StructTransfer transfers[100];
+  int sizeTransfers;
+  int code;
 } StructMessage;
 #endif
