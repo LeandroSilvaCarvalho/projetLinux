@@ -189,5 +189,5 @@ int main(int argc, char const *argv[])
         sclose(pipe[1]);
     }
 
-    return 0;
+    exit(EXIT_SUCCESS);
 }
