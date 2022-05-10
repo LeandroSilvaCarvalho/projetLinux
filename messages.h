@@ -11,7 +11,7 @@
 
 /* struct message used between server and client */
 typedef struct {
-  char messageText[MAX_TEXT];
+  int newSolde;
   StructTransfer transfers[100];
   int sizeTransfers;
   int code;

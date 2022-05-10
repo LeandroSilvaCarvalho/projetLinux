@@ -159,7 +159,7 @@ int main(int argc, char const *argv[])
                     if (message.code == INSCRIPTION_OK)
                     {
                         printf("The transfer has been done\n");
-                        int newSold = atoi(message.messageText);
+                        int newSold = message.newSolde;
                         printf("The new sold of your account is:%d\n", newSold);
                     }
                     else
