@@ -15,6 +15,12 @@
 
 volatile sig_atomic_t end = 0;
 
+/**
+ * PRE:  port: a valid port number
+ * POST: on success, binds a socket to 0.0.0.0:port and listen to it
+ *       return socket file descriptor
+ *       on failure, displays the error cause and quits the program
+ */
 int initSocketServer(int port)
 {
   int sockfd = ssocket();
@@ -23,35 +29,46 @@ int initSocketServer(int port)
   return sockfd;
 }
 
+//******************************************************************************
+// Signal handler
+//******************************************************************************
 void sigint_handler()
 {
-  printf("\nShutting down the server\n");
+  printf("\nShutting down the server...\n");
   end = 1;
 }
 
+//******************************************************************************
+// MAIN FUNCTION
+//******************************************************************************
 int main(int argc, char const *argv[])
 {
+  // Signal arming SIGINT
   ssigaction(SIGINT, sigint_handler);
   StructMessage msg;
   if (argc < 1)
   {
     perror("Missing arguments\n");
-    exit(0);
+    exit(EXIT_FAILURE);
   }
 
+  // Getting semaphores
   int sem_id = sem_get(SEM_KEY, 1);
+  // Getting the shared memory
   int shm_id = sshmget(SHM_KEY, 1000 * sizeof(int), 0);
   int *z = sshmat(shm_id);
 
   int port = atoi(argv[1]);
   int sockfd = initSocketServer(port);
-  printf("The server start on port: %d \n", port);
+  printf("The server started on port: %d\n", port);
 
   while (end == 0)
   {
+    // Accepts a client connection
     int newSockfd = accept(sockfd, NULL, NULL);
     if (newSockfd > -1)
     {
+      // Reads the message from the client
       int nbCharRd = read(newSockfd, &msg, sizeof(msg));
       if (nbCharRd > -1)
       {
@@ -62,32 +79,40 @@ int main(int argc, char const *argv[])
           int sender = transfer.sender;
           int receiver = transfer.receiver;
           int amount = transfer.amount;
-          printf("Sender: %d\n", sender);
-          printf("receiver: %d\n", receiver);
-          printf("amount: %d\n", amount);
+          printf("Sender's account number: %d\n", sender);
+          printf("Receiver's account number: %d\n", receiver);
+          printf("Amount transferred to the receiver: %d€\n", amount);
 
+          // We decided to set a balance limit which is -500€ 
+          // so the account's balance can't go below that limit
           if (z[sender] - amount < LIMIT_AMOUNT)
           {
-            perror("The sender does not have a sufficient balance \n");
-            strcpy(msg.message, "The sender does not have a sufficient balance");
+            perror("The sender doesn't have a sufficient balance\n");
+            strcpy(msg.message, "The sender doesn't have a sufficient balance");
             msg.code = TRANSFER_KO;
           }
           else
           {
             sem_down0(sem_id);
+            // Start of critical section
             z[sender] -= amount;
             z[receiver] += amount;
+            // End of critical section
             sem_up0(sem_id);
-            msg.newSolde = z[sender];
+            msg.newBalance = z[sender];
             msg.code = TRANSFER_OK;
           }
-          printf("New solde: %d\n", msg.newSolde);
+          printf("New balance of the sender's account: %d€\n", msg.newBalance);
         }
         swrite(newSockfd, &msg, sizeof(msg));
       }
+
+      // Close client's connection
       sclose(newSockfd);
     }
   }
+  
+  // Close listening socket
   sclose(sockfd);
   exit(EXIT_SUCCESS);
 }

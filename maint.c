@@ -10,11 +10,15 @@
 #include "utils_v1.h"
 #include "config.h"
 
+//*****************************************************************************
+// Method to check if the user wrote correct arguments,
+// otherwise it displays to him the correct usage.                                                       
+//*****************************************************************************
 void checkUsage(int argc, char *argv[])
 {
     if ((argc != 2 && argc != 3) || (!strcmp(argv[1], "1") && !strcmp(argv[1], "2") && !strcmp(argv[1], "3")))
     {
-        printf("Usage :\n");
+        printf("Usage:\n");
         printf("%s 1 to create IPCs\n", argv[0]);
         printf("%s 2 to destroy IPCs\n", argv[0]);
         printf("%s 3 [opt] to reserve exclusively the shared account book for [opt] seconds\n", argv[0]);
@@ -22,6 +26,9 @@ void checkUsage(int argc, char *argv[])
     }
 }
 
+//******************************************************************************
+// MAIN FUNCTION
+//******************************************************************************
 int main(int argc, char *argv[])
 {
     checkUsage(argc, argv);
@@ -49,12 +56,14 @@ int main(int argc, char *argv[])
         sem_delete(sem_id);
 
         printf("IPCs freed\n");
-    } else {
+    } else { // argv[1] = "3"
         int sem_id = sem_get(SEM_KEY, 1);
         int opt = atoi(argv[2]);
         printf("The shared account book is reserved for %d seconds\n", opt);
         sem_down0(sem_id);
+        // Start of critical section
         sleep(opt);
+        // End of critical section
         sem_up0(sem_id);
         printf("The shared account book is freed\n");
     }
