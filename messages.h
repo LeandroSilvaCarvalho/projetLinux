@@ -4,8 +4,8 @@
 #define MAX_TEXT 		256
 
 #define INSCRIPTION_REQUEST 10
-#define INSCRIPTION_OK		11
-#define INSCRIPTION_KO 		12
+#define TRANSFER_OK		11
+#define TRANSFER_KO 		12
 
 #include "transfer.h"
 
@@ -14,6 +14,7 @@ typedef struct {
   int newSolde;
   StructTransfer transfers[100];
   int sizeTransfers;
+  char message[MAX_TEXT];
   int code;
 } StructMessage;
 #endif

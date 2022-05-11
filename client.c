@@ -115,39 +115,24 @@ int main(int argc, char const *argv[])
         char choice[CHOICE_SIZE];
 
         sread(0, choice, CHOICE_SIZE);
-        choice[strlen(choice) - 1] = '\0';
 
         while (choice[0] != 'q')
         {
             if (strlen(choice) > 1)
             {
 
-                char dividedChoise[4][50];
-                int j = 0, ctr = 0;
-                for (int i = 0; i < strlen(choice); i++)
-                {
-                    if (choice[i] == ' ' || choice[i] == '\0')
-                    {
-                        dividedChoise[ctr][j] = '\0';
-                        ctr++;
-                        j = 0;
-                    }
-                    else
-                    {
-                        dividedChoise[ctr][j] = choice[i];
-                        j++;
-                    }
-                }
+                char *symbol = strtok(choice, " ");
+                char *receiver = strtok(NULL, " ");
+                char *amount = strtok(NULL, "\n");
 
-                if (choice[0] == '+')
+                if (strcmp(symbol, "+") == 0)
                 {
-                    printf("type:%s|\n", dividedChoise[0]);
-                    printf("compte:%s|\n", dividedChoise[1]);
-                    printf("montant:%s|\n", dividedChoise[2]);
+
+                    printf("+++ New transfer +++\n");
 
                     int sockfd = initSocketClient(adr, port);
-                    transfer.receiver = atoi(dividedChoise[1]);
-                    transfer.amount = atoi(dividedChoise[2]);
+                    transfer.receiver = atoi(receiver);
+                    transfer.amount = atoi(amount);
 
                     StructMessage message;
                     message.transfers[0] = transfer;
@@ -156,7 +141,7 @@ int main(int argc, char const *argv[])
 
                     // Message a ajouter
                     sread(sockfd, &message, sizeof(message));
-                    if (message.code == INSCRIPTION_OK)
+                    if (message.code == TRANSFER_OK)
                     {
                         printf("The transfer has been done\n");
                         int newSold = message.newSolde;
@@ -165,28 +150,26 @@ int main(int argc, char const *argv[])
                     else
                     {
                         printf("An error occurred\n");
+                        printf("%s\n", message.message);
                         printf("The transfer hasn't been done\n");
                     }
                     sclose(sockfd);
                 }
-                else if (choice[0] == '*')
+                else if (strcmp(symbol, "*") == 0)
                 {
-                    printf("type:%s|\n", dividedChoise[0]);
-                    printf("compte:%s|\n", dividedChoise[1]);
-                    printf("montant:%s|\n", dividedChoise[2]);
-                    transfer.receiver = atoi(dividedChoise[1]);
-                    transfer.amount = atoi(dividedChoise[2]); 
+                    printf("*** New recurrent transfer ***\n");
+                    transfer.receiver = atoi(receiver);
+                    transfer.amount = atoi(amount);
                     swrite(pipe[1], &transfer, sizeof(transfer));
                 }
             }
 
             propositions();
             sread(0, choice, CHOICE_SIZE);
-            choice[strlen(choice) - 1] = '\0';
         }
-        sclose(timerId);
-        sclose(recurrentTrasferId);
         sclose(pipe[1]);
+        skill(timerId, SIGKILL);
+        skill(recurrentTrasferId, SIGKILL);
     }
 
     exit(EXIT_SUCCESS);

@@ -25,6 +25,7 @@ int initSocketServer(int port)
 
 void sigint_handler()
 {
+  printf("\nShutting down the server\n");
   end = 1;
 }
 
@@ -42,61 +43,50 @@ int main(int argc, char const *argv[])
   int shm_id = sshmget(SHM_KEY, 1000 * sizeof(int), 0);
   int *z = sshmat(shm_id);
 
-  struct pollfd fds[1024];
-  bool fds_invalid[1024];
-  int nbSockfd = 0;
-
   int port = atoi(argv[1]);
   int sockfd = initSocketServer(port);
   printf("The server start on port: %d \n", port);
 
-  fds[nbSockfd].fd = sockfd;
-  fds[nbSockfd].events = POLLIN;
-  fds_invalid[nbSockfd] = false;
-  nbSockfd++;
-  int newSockfd;
-
   while (end == 0)
   {
-    spoll(fds, nbSockfd, 0);
-
-    if (fds[0].revents & POLLIN & !fds_invalid[0])
+    int newSockfd = accept(sockfd, NULL, NULL);
+    if (newSockfd > -1)
     {
-      newSockfd = saccept(sockfd);
-      fds[nbSockfd].fd = newSockfd;
-      fds[nbSockfd].events = POLLIN;
-      fds_invalid[nbSockfd] = false;
-      nbSockfd++;
-
-      sread(newSockfd, &msg, sizeof(msg));
-
-      int sizeTransfers = msg.sizeTransfers;
-      for (int i = 0; i < sizeTransfers; i++)
+      int nbCharRd = read(newSockfd, &msg, sizeof(msg));
+      if (nbCharRd > -1)
       {
-
-        StructTransfer transfer = msg.transfers[i];
-        int sender = transfer.sender;
-        int receiver = transfer.receiver;
-        int amount = transfer.amount;
-
-        if (z[sender] - amount < LIMIT_AMOUNT)
+        int sizeTransfers = msg.sizeTransfers;
+        for (int i = 0; i < sizeTransfers; i++)
         {
-          perror("The sender does not have a sufficient balance \n");
+          StructTransfer transfer = msg.transfers[i];
+          int sender = transfer.sender;
+          int receiver = transfer.receiver;
+          int amount = transfer.amount;
+          printf("Sender: %d\n", sender);
+          printf("receiver: %d\n", receiver);
+          printf("amount: %d\n", amount);
+
+          if (z[sender] - amount < LIMIT_AMOUNT)
+          {
+            perror("The sender does not have a sufficient balance \n");
+            strcpy(msg.message, "The sender does not have a sufficient balance");
+            msg.code = TRANSFER_KO;
+          }
+          else
+          {
+            sem_down0(sem_id);
+            z[sender] -= amount;
+            z[receiver] += amount;
+            sem_up0(sem_id);
+            msg.newSolde = z[sender];
+            msg.code = TRANSFER_OK;
+          }
+          printf("New solde: %d\n", msg.newSolde);
         }
-        else
-        {
-          sem_down0(sem_id);
-          z[sender] -= amount;
-          z[receiver] += amount;
-          sem_up0(sem_id);
-          msg.newSolde = z[sender];
-        }
+        swrite(newSockfd, &msg, sizeof(msg));
       }
+      sclose(newSockfd);
     }
-
-    msg.code = INSCRIPTION_OK;
-
-    swrite(newSockfd, &msg, sizeof(msg));
   }
   sclose(sockfd);
   exit(EXIT_SUCCESS);
