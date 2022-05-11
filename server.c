@@ -13,6 +13,8 @@
 #include "config.h"
 #include "transfer.h"
 
+volatile sig_atomic_t end = 0;
+
 int initSocketServer(int port)
 {
   int sockfd = ssocket();
@@ -21,8 +23,14 @@ int initSocketServer(int port)
   return sockfd;
 }
 
+void sigint_handler()
+{
+  end = 1;
+}
+
 int main(int argc, char const *argv[])
 {
+  ssigaction(SIGINT, sigint_handler);
   StructMessage msg;
   if (argc < 1)
   {
@@ -40,7 +48,7 @@ int main(int argc, char const *argv[])
 
   int port = atoi(argv[1]);
   int sockfd = initSocketServer(port);
-  printf("Le serveur tourne sur le port : %i \n", port);
+  printf("The server start on port: %d \n", port);
 
   fds[nbSockfd].fd = sockfd;
   fds[nbSockfd].events = POLLIN;
@@ -48,7 +56,7 @@ int main(int argc, char const *argv[])
   nbSockfd++;
   int newSockfd;
 
-  while (1)
+  while (end == 0)
   {
     spoll(fds, nbSockfd, 0);
 
@@ -65,14 +73,11 @@ int main(int argc, char const *argv[])
       int sizeTransfers = msg.sizeTransfers;
       for (int i = 0; i < sizeTransfers; i++)
       {
+
         StructTransfer transfer = msg.transfers[i];
         int sender = transfer.sender;
         int receiver = transfer.receiver;
         int amount = transfer.amount;
-
-        printf("The sender: %d\n", sender);
-        printf("The receiver: %d\n", receiver);
-        printf("The amount: %d\n", amount);
 
         if (z[sender] - amount < LIMIT_AMOUNT)
         {
