@@ -41,6 +41,12 @@ void proposals()
 //******************************************************************************
 // Timer child code sending a heartbeat every delay seconds
 //******************************************************************************
+
+/**
+ * PRE: argDelay: the delay for each heartbeat
+ *      argPipe: the pipe where the heartbeat will be send
+ * POST: on success, sends the heartbeat in the pipe
+ */
 void child_timer(void *argDelay, void *argPipe)
 {
     int *delay = argDelay;
@@ -64,6 +70,14 @@ void child_timer(void *argDelay, void *argPipe)
 // Second child code which manages a series of recurring transfers 
 // at each heartbeat sent by the timer child
 //******************************************************************************
+
+/**
+ * PRE: argPipe: the pipe where the data is sent
+ *      argAddress: the server's address 
+ *      argPort: the server's port
+ * POST: sends the array to the server if there's a receiver (-1)
+ *       otherwise, put the reccurrent transfer in an array
+ */
 void child_recurrent_transfer(void *argPipe, void *argAddress, void *argPort)
 {
     int *pipe = argPipe;
