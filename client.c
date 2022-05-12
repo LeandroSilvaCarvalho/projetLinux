@@ -12,7 +12,7 @@
 #include "transfer.h"
 #include "messages.h"
 
-#define CHOICE_SIZE 50
+#define CHOICE_SIZE 50  // Size of the buffer for the user's inputs
 
 /**
  * PRE: ServerIP: a valid IP address
@@ -76,7 +76,7 @@ void child_timer(void *argDelay, void *argPipe)
  *      argAddress: the server's address 
  *      argPort: the server's port
  * POST: sends the array to the server if there's a receiver (-1)
- *       otherwise, put the reccurrent transfer in an array
+ *       otherwise, put the recurrent transfer in an array
  */
 void child_recurrent_transfer(void *argPipe, void *argAddress, void *argPort)
 {

@@ -1,7 +1,7 @@
 #ifndef _CONFIG_H_
 #define _CONFIG_H_
 
-#define BACKLOG 1000
+#define BACKLOG 1000    // Maximum value of the queue for clients
 #define SERVER_IP		"127.0.0.1"  // localhost
 
 #define SHM_KEY 248
