@@ -56,11 +56,12 @@ int main(int argc, char const *argv[])
   int sem_id = sem_get(SEM_KEY, 1);
   // Getting the shared memory
   int shm_id = sshmget(SHM_KEY, 1000 * sizeof(int), 0);
-  int *z = sshmat(shm_id);
+  int *sharedMem = sshmat(shm_id);
 
   int port = atoi(argv[1]);
   int sockfd = initSocketServer(port);
   printf("The server started on port: %d\n", port);
+  printf("\n");
 
   while (end == 0)
   {
@@ -79,13 +80,10 @@ int main(int argc, char const *argv[])
           int sender = transfer.sender;
           int receiver = transfer.receiver;
           int amount = transfer.amount;
-          printf("Sender's account number: %d\n", sender);
-          printf("Receiver's account number: %d\n", receiver);
-          printf("Amount transferred to the receiver: %d€\n", amount);
 
-          // We decided to set a balance limit which is -500€ 
+          // We decided to set a balance limit which is -500€
           // so the account's balance can't go below that limit
-          if (z[sender] - amount < LIMIT_AMOUNT)
+          if (sharedMem[sender] - amount < LIMIT_AMOUNT)
           {
             perror("The sender doesn't have a sufficient balance\n");
             strcpy(msg.message, "The sender doesn't have a sufficient balance");
@@ -95,14 +93,18 @@ int main(int argc, char const *argv[])
           {
             sem_down0(sem_id);
             // Start of critical section
-            z[sender] -= amount;
-            z[receiver] += amount;
+            printf("Sender's account number: %d\n", sender);
+            printf("Receiver's account number: %d\n", receiver);
+            printf("Amount transferred to the receiver: %d€\n", amount);
+            sharedMem[sender] -= amount;
+            sharedMem[receiver] += amount;
             // End of critical section
             sem_up0(sem_id);
-            msg.newBalance = z[sender];
+            msg.newBalance = sharedMem[sender];
             msg.code = TRANSFER_OK;
           }
           printf("New balance of the sender's account: %d€\n", msg.newBalance);
+          printf("\n");
         }
         swrite(newSockfd, &msg, sizeof(msg));
       }
@@ -111,7 +113,9 @@ int main(int argc, char const *argv[])
       sclose(newSockfd);
     }
   }
-  
+
+  // Segment detached
+  sshmdt(sharedMem);
   // Close listening socket
   sclose(sockfd);
   exit(EXIT_SUCCESS);

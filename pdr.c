@@ -25,14 +25,14 @@ int main(int argc, char const *argv[])
         int sem_id = sem_get(SEM_KEY, 1);
         // Getting the shared memory
         int shm_id = sshmget(SHM_KEY, 1000 * sizeof(int), 0);
-        int *z = sshmat(shm_id);
+        int *sharedMem = sshmat(shm_id);
         int account = atoi(argv[1]);
         int amount = atoi(argv[2]);
-        printf("Current balance of your account: %d€\n", z[account]);
+        printf("Current balance of your account: %d€\n", sharedMem[account]);
 
         // We decided to set a balance limit which is -500€ 
         // so the account's balance can't go below that limit
-        if (z[account] + amount < LIMIT_AMOUNT)
+        if (sharedMem[account] + amount < LIMIT_AMOUNT)
         {
             perror("Overdraft balance\n");
         }
@@ -40,11 +40,14 @@ int main(int argc, char const *argv[])
         {
             sem_down0(sem_id);
             // Start of critical section
-            z[account] += amount;
+            sharedMem[account] += amount;
             // End of critical section
             sem_up0(sem_id);
-            printf("Balance of your account after transaction: %d€\n", z[account]); 
+            printf("Balance of your account after transaction: %d€\n", sharedMem[account]); 
         }
+
+        // Segment detached
+        sshmdt(sharedMem);
     }
     
     exit(EXIT_SUCCESS);

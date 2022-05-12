@@ -41,10 +41,10 @@ void proposals()
 //******************************************************************************
 // Timer child code sending a heartbeat every delay seconds
 //******************************************************************************
-void child_timer(void *d, void *p)
+void child_timer(void *argDelay, void *argPipe)
 {
-    int *delay = d;
-    int *pipe = p;
+    int *delay = argDelay;
+    int *pipe = argPipe;
 
     // Closing the reading descriptor
     sclose(pipe[0]);
@@ -64,11 +64,11 @@ void child_timer(void *d, void *p)
 // Second child code which manages a series of recurring transfers 
 // at each heartbeat sent by the timer child
 //******************************************************************************
-void child_recurrent_transfer(void *p, void *a, void *po)
+void child_recurrent_transfer(void *argPipe, void *argAddress, void *argPort)
 {
-    int *pipe = p;
-    char *adr = a;
-    int *port = po;
+    int *pipe = argPipe;
+    char *adr = argAddress;
+    int *port = argPort;
 
     // Closing the writing descriptor
     sclose(pipe[1]);
@@ -126,6 +126,7 @@ int main(int argc, char const *argv[])
         printf("Port: %d\n", port);
         printf("Sender's account number: %d\n", num);
         printf("Delay for each reccurrent transfer: %ds\n", delay);
+        printf("\n");
 
         StructTransfer transfer;
         transfer.sender = num;
@@ -155,7 +156,8 @@ int main(int argc, char const *argv[])
                 // and to get the next token (because of the static pointer)
                 char *receiver = strtok(NULL, " ");
                 char *amount = strtok(NULL, "\n");
-
+                
+                printf("\n");
                 if (strcmp(symbol, "+") == 0)
                 {
                     printf("+++++ New transfer +++++\n");
@@ -192,6 +194,7 @@ int main(int argc, char const *argv[])
                     transfer.amount = atoi(amount);
                     swrite(pipe[1], &transfer, sizeof(transfer));
                 }
+                printf("\n");
             }
             proposals();
             sread(0, choice, CHOICE_SIZE);
